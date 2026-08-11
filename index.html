@@ -222,6 +222,8 @@
 
   /* ---------- karikature ---------- */
   .face { display: block; flex: none; }
+  .face-btn { cursor: pointer; border-radius: 2px; }
+  .face-btn:hover { outline: 2px dashed var(--line); outline-offset: 2px; }
   .face svg { display: block; width: 100%; height: 100%; }
 
   /* ---------- kartica ---------- */
@@ -450,6 +452,7 @@
       <p><b>1.</b> Telefon kroži. Vsak pridrži kartico in si sam ogleda svojo besedo.</p>
       <p><b>2.</b> V krogu vsak pove <b>eno</b> asociacijo — dovolj natančno, da dokažeš, da veš, a ne toliko, da blefer ugane besedo.</p>
       <p><b>3.</b> Glasujete, kdo blefira. Če ga ujamete, ima še eno priložnost, da ugane besedo.</p>
+      <p><b>4.</b> Če blefer izusti koren iskane besede, kdorkoli zavpije <b>Korenček</b> — takoj izgubi in zadnje priložnosti ne dobi.</p>
     </div>
   </section>
 
@@ -497,6 +500,8 @@
     <ul class="order" id="round-order"></ul>
     <p class="lede">Krog teče po vrstnem redu s seznama. Vsak pove eno besedo — brez razlag, brez ponavljanja. Ko se krog zaključi, se pogovorite in glasujte.</p>
     <button class="btn" id="to-vote" type="button">Na glasovanje</button>
+    <button class="btn red" id="korencek" type="button">Korenček!</button>
+    <p class="lede">Če blefer izusti koren iskane besede, pritisnite <b>Korenček</b> — takoj izgubi, brez zadnje priložnosti.</p>
   </section>
 
   <!-- ========== GLASOVANJE ========== -->
@@ -513,9 +518,9 @@
     <p class="eyebrow">Razkritje</p>
 
     <div class="stack">
-      <p class="eyebrow">Beseda je bila</p>
-      <p class="secret-word" id="res-word"></p>
-      <p class="secret-hint" id="res-hint"></p>
+      <p class="eyebrow">Blefer je videl samo</p>
+      <p class="secret-word" id="res-word" style="color:var(--red)"></p>
+      <p class="secret-hint" id="res-hint">Iskane besede igra ne izda — povejte jo sami, če želite.</p>
     </div>
 
     <div class="verdict" id="res-verdict">
@@ -1129,9 +1134,39 @@
     '<path d="M24 34 Q26 15 50 15 Q74 15 76 34 Q62 27 50 27 Q38 27 24 34 Z"/>',              // kratki
     '<path d="M23 34 Q24 12 50 12 Q76 12 77 34 Q69 29 63 19 Q56 30 50 19 Q44 30 37 19 Q31 29 23 34 Z"/>' // nazaj počesan
   ];
+  // ženske pričeske se rišejo v dveh plasteh: masa za glavo in pramen čez čelo
+  const HAIR_Z = [
+    { // dolgi ravni
+      back: '<path d="M16 52 Q16 8 50 8 Q84 8 84 52 L84 88 L68 88 Q76 58 68 42 L32 42 Q24 58 32 88 L16 88 Z"/>',
+      front: '<path d="M24 40 Q27 11 50 11 Q73 11 76 40 Q62 25 50 27 Q36 29 24 40 Z"/>'
+    },
+    { // bob
+      back: '<path d="M18 50 Q18 9 50 9 Q82 9 82 50 L82 70 Q78 75 70 73 Q77 54 68 42 L32 42 Q23 54 30 73 Q22 75 18 70 Z"/>',
+      front: '<path d="M25 39 Q28 12 50 12 Q72 12 75 39 Q60 26 46 29 Q34 31 25 39 Z"/>'
+    },
+    { // čop
+      back: '<path d="M20 48 Q20 10 50 10 Q80 10 80 48 L80 60 Q72 50 66 42 L34 42 Q28 50 20 60 Z"/>'
+          + '<path d="M78 38 Q93 46 89 68 Q87 79 79 81 Q87 63 75 50 Z"/>',
+      front: '<path d="M24 38 Q27 12 50 12 Q73 12 76 38 Q62 24 50 26 Q36 28 24 38 Z"/>'
+    },
+    { // figa
+      back: '<path d="M22 46 Q22 10 50 10 Q78 10 78 46 L78 58 Q70 46 64 40 L36 40 Q30 46 22 58 Z"/>',
+      front: '<path d="M25 38 Q28 12 50 12 Q72 12 75 38 Q62 24 50 26 Q36 28 25 38 Z"/><circle cx="50" cy="6" r="9"/>'
+    },
+    { // kodri
+      back: '<path d="M15 54 Q13 26 26 16 Q34 4 50 6 Q66 4 74 16 Q87 26 85 54 Q85 77 78 87 Q81 62 70 46 L30 46 Q19 62 22 87 Q15 77 15 54 Z"/>',
+      front: '<path d="M25 40 Q28 14 50 14 Q72 14 75 40 Q66 28 58 32 Q50 24 42 32 Q34 28 25 40 Z"/>'
+    },
+    { // kratki
+      back: '<path d="M22 48 Q22 12 50 12 Q78 12 78 48 L78 55 Q70 44 64 40 L36 40 Q30 44 22 55 Z"/>',
+      front: '<path d="M23 37 Q26 11 50 11 Q74 11 77 37 Q70 21 50 25 Q34 27 23 37 Z"/>'
+    }
+  ];
+
   const SKIN = ["#E8CBA8", "#D9B389", "#F0DABB", "#CBA378"];
   const HAIRC = ["#1A1712", "#4A4038", "#8E887A", "#2C2620", "#6B5B48"];
   const SUIT = ["#1E2A44", "#2C2A26", "#3A2E3C", "#123049", "#43372C"];
+  const BLUZA = ["#2E4A63", "#5C3A4C", "#3D5240", "#4A3B5E", "#6B4A32"];
   const TIE = ["var(--red)", "var(--blue)", "var(--lipa)", "#8C2F6B"];
 
   // oblika glave nosi največ karikature — okrogla, dolga, oglata čeljust, hruška
@@ -1142,10 +1177,14 @@
     "M27 40 Q27 14 50 14 Q73 14 73 40 Q80 73 50 78 Q20 73 27 40 Z"
   ];
 
-  function face(i) {
+  function face(i, spol) {
+    const z = spol === "z";
     const skin = SKIN[i % SKIN.length];
     const ink = ' stroke="#14120E" stroke-linejoin="round" stroke-linecap="round"';
-    const hair = HAIR[i % HAIR.length];
+    const hair = z ? "" : HAIR[i % HAIR.length];
+    const hz = z ? HAIR_Z[i % HAIR_Z.length] : null;
+    const barvaLas = HAIRC[i % HAIRC.length];
+    const barvaDetajla = TIE[i % TIE.length];
 
     // nosovi: kljukast, krompir, dolg konec — vsi izrazito preveliki
     const nos = i % 3 === 0
@@ -1161,8 +1200,8 @@
         : "");
 
     // brki samo tam, kjer jih krompirjast nos ne povozi
-    const brki = (i % 4 === 2 && i % 3 !== 1)
-      ? '<path d="M36 66 q14 -8 28 0 q-14 9 -28 0 Z" fill="' + HAIRC[i % HAIRC.length] + '"' + ink + ' stroke-width="2.4"/>'
+    const brki = (!z && i % 4 === 2 && i % 3 !== 1)
+      ? '<path d="M36 66 q14 -8 28 0 q-14 9 -28 0 Z" fill="' + barvaLas + '"' + ink + ' stroke-width="2.4"/>'
       : "";
 
     const usta = (i % 5 === 0)
@@ -1178,40 +1217,88 @@
       ? '<path d="M30 38 q8 -6 17 -2"/><path d="M70 35 q-8 -5 -16 -1"/>'
       : '<path d="M30 34 q8 4 17 3"/><path d="M70 37 q-8 -6 -16 -2"/>';
 
-    const podbradek = (i % 6 === 4)
+    const podbradek = (!z && i % 6 === 4)
       ? '<path d="M39 73 q11 8 22 0" fill="none"' + ink + ' stroke-width="2.6" opacity=".8"/>'
       : "";
 
-    const uho = 4.5 + (i % 3) * 1.6;
+    const uho = z ? 4.2 : 4.5 + (i % 3) * 1.6;
+    const lasje = '<g fill="' + barvaLas + '"' + ink + ' stroke-width="2.6">';
+
+    // oblačilo: moški dobi suknjič s kravato, ženska bluzo z ovratnikom in verižico —
+    // barva kravate oz. obeska loči like med sabo, zato je vedno vidna
+    const oblacilo = z
+      ? '<path d="M2 100 Q6 87 27 82 L50 93 L73 82 Q94 87 98 100 Z" fill="' + BLUZA[i % BLUZA.length] + '"' + ink + ' stroke-width="3.2"/>'
+        + '<path d="M39 82 Q50 97 61 82 Z" fill="' + skin + '"' + ink + ' stroke-width="2.6"/>'
+        + '<path d="M40 84 Q50 93 60 84" fill="none"' + ink + ' stroke-width="2"/>'
+        + '<circle cx="50" cy="92" r="2.8" fill="' + barvaDetajla + '"' + ink + ' stroke-width="1.8"/>'
+      : '<path d="M2 100 Q6 87 27 82 L50 93 L73 82 Q94 87 98 100 Z" fill="' + SUIT[i % SUIT.length] + '"' + ink + ' stroke-width="3.2"/>'
+        + '<path d="M40 80 L50 93 L60 80 L55 78 L50 85 L45 78 Z" fill="#F2EDDD"' + ink + ' stroke-width="2.4"/>'
+        + '<path d="M45.5 86 L54.5 86 L56.5 92 L43.5 92 Z" fill="' + barvaDetajla + '"' + ink + ' stroke-width="2.2"/>'
+        + '<path d="M43.5 92 L56.5 92 L59 100 L41 100 Z" fill="' + barvaDetajla + '"' + ink + ' stroke-width="2.2"/>';
+
+    const uhani = z
+      ? '<circle cx="23" cy="57" r="2.5" fill="' + barvaDetajla + '"' + ink + ' stroke-width="1.6"/>'
+        + '<circle cx="77" cy="57" r="2.5" fill="' + barvaDetajla + '"' + ink + ' stroke-width="1.6"/>'
+      : "";
 
     return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img">'
-      // suknjič, srajca, kravata — barva kravate loči like med sabo, zato debela in vidna
-      + '<path d="M2 100 Q6 87 27 82 L50 93 L73 82 Q94 87 98 100 Z" fill="' + SUIT[i % SUIT.length] + '"' + ink + ' stroke-width="3.2"/>'
-      + '<path d="M40 80 L50 93 L60 80 L55 78 L50 85 L45 78 Z" fill="#F2EDDD"' + ink + ' stroke-width="2.4"/>'
-      + '<path d="M45.5 86 L54.5 86 L56.5 92 L43.5 92 Z" fill="' + TIE[i % TIE.length] + '"' + ink + ' stroke-width="2.2"/>'
-      + '<path d="M43.5 92 L56.5 92 L59 100 L41 100 Z" fill="' + TIE[i % TIE.length] + '"' + ink + ' stroke-width="2.2"/>'
+      // dolgi lasje padajo za glavo, zato gredo pod vse ostalo
+      + (hz ? lasje + hz.back + "</g>" : "")
+      + oblacilo
       // vrat
       + '<path d="M43 68 h14 v14 l-7 7 -7 -7 z" fill="' + skin + '"' + ink + ' stroke-width="3"/>'
       // ušesa
       + '<ellipse cx="23" cy="50" rx="' + uho + '" ry="8" fill="' + skin + '"' + ink + ' stroke-width="3"/>'
       + '<ellipse cx="77" cy="50" rx="' + uho + '" ry="8" fill="' + skin + '"' + ink + ' stroke-width="3"/>'
+      + uhani
       // glava
       + '<path d="' + HEADS[i % HEADS.length] + '" fill="' + skin + '"' + ink + ' stroke-width="3.4"/>'
       + podbradek
       + '<circle cx="31" cy="62" r="5" fill="#C0202A" opacity=".2"/><circle cx="69" cy="62" r="5" fill="#C0202A" opacity=".2"/>'
-      + (hair ? '<g fill="' + HAIRC[i % HAIRC.length] + '"' + ink + ' stroke-width="2.6">' + hair + "</g>" : "")
+      + (hz ? lasje + hz.front + "</g>" : (hair ? lasje + hair + "</g>" : ""))
       + '<g fill="none"' + ink + ' stroke-width="4">' + obrvi + "</g>"
       + '<circle cx="39" cy="46" r="2.8" fill="#14120E"/><circle cx="61" cy="46" r="2.8" fill="#14120E"/>'
       + nos + ocala + brki + usta
       + "</svg>";
   }
 
-  function faceEl(i, rem) {
+  /* ---------------- spol iz imena ---------------- */
+  // ugibanje po imenu ne more biti nezmotljivo (vzdevki, tuja imena), zato
+  // je karikatura na seznamu igralcev klikljiva in spol lahko popraviš ročno
+  const IMENA_Z = new Set(("ana maja nina sara eva nika lara zala ema julija lucija klara neža manca mojca špela "
+    + "tjaša katja petra barbara nataša andreja mateja simona alenka irena marija marjeta metka tina tanja sanja "
+    + "urška vesna darja jasna polona živa iva ivana helena karmen nada olga sonja bojana damjana romana suzana "
+    + "valentina veronika brigita elizabeta erika gabrijela jerneja kaja larisa lejla lidija lili maša melita mira "
+    + "nuša pia rebeka silva stanka tea zdenka zoja brina ajda ela gaja hana ida iza katarina lana lea lina lija "
+    + "liza mila mia nora pika taja tia tinkara tisa zarja lisa sarah emma sophie sofia anna julia laura maria "
+    + "elena kate emily hannah amy alice grace chloe zoe ella lily rose vera ines nadia jana ines cvetka "
+    + "danica dragica frančiška ivanka jožica ljudmila magdalena martina milena mihaela monika natalija nevenka "
+    + "renata rosana rozalija slavica stanislava terezija vanda vida vilma zvonka ksenija breda bernarda").split(" "));
+
+  const IMENA_M = new Set(("luka miha jaka matija jaša nikola tine bine jure rene samo marko janez jože franc "
+    + "anton ivan andrej matej peter matic jan nejc rok žan tim filip nik gal vid bor anže blaž klemen aleš "
+    + "boštjan damjan dejan denis domen dušan gregor igor iztok jernej lovro maks martin miran mitja nace primož "
+    + "robert rudi sašo simon stanko tadej tomaž uroš urban val vili vinko zoran žiga aljaž bojan borut ciril "
+    + "david edvard erik gašper grega jakob kristjan leon lenart marjan milan miloš oskar patrik sebastjan slavko "
+    + "svit teo timotej valentin vasja viktor vojko mike john tom paul james chris max leo ben dan nick steve "
+    + "mark adam eric alex sam jaka bine toni ivo alojz stanislav vladimir zdravko srečko rajko boris branko "
+    + "dragan goran janko jaka jozef karel ludvik maksimilijan mirko nejc rado roman rudolf silvo stane štefan").split(" "));
+
+  function spolIz(ime) {
+    const n = (ime || "").trim().toLowerCase().split(/\s+/)[0];
+    if (!n) return "m";
+    if (IMENA_Z.has(n)) return "z";
+    if (IMENA_M.has(n)) return "m";
+    // slovensko pravilo: imena na -a so praviloma ženska, na soglasnik moška
+    return /a$/.test(n) ? "z" : "m";
+  }
+
+  function faceEl(i, spol, rem) {
     const s = document.createElement("span");
     s.className = "face";
     s.style.width = rem; s.style.height = rem;
     s.setAttribute("aria-hidden", "true");
-    s.innerHTML = face(i);
+    s.innerHTML = face(i, spol);
     return s;
   }
 
@@ -1222,7 +1309,7 @@
     used: new Set(), roundNo: 0,
     word: "", hint: "",
     impostors: [], order: [], dealIdx: 0,
-    accused: null, scored: false
+    accused: null, scored: false, korencek: false
   };
 
   const $ = id => document.getElementById(id);
@@ -1236,13 +1323,32 @@
   /* ---------------- nastavitve ---------------- */
   const playersEl = $("players");
   let nameFields = ["", "", "", ""];
+  let spolRocno = [];   // null = ugotovljeno iz imena, sicer "m" / "z"
+
+  const spolZa = i => spolRocno[i] || spolIz(nameFields[i]);
 
   function renderPlayers(focusLast) {
     playersEl.textContent = "";
     nameFields.forEach((val, i) => {
       const row = document.createElement("div");
       row.className = "row";
-      row.append(faceEl(i, "2rem"));
+
+      const lice = faceEl(i, spolZa(i), "2rem");
+      lice.classList.add("face-btn");
+      lice.removeAttribute("aria-hidden");
+      lice.setAttribute("role", "button");
+      lice.setAttribute("tabindex", "0");
+      lice.title = "Klikni za zamenjavo spola karikature";
+      const preklopi = () => {
+        spolRocno[i] = spolZa(i) === "z" ? "m" : "z";
+        lice.innerHTML = face(i, spolRocno[i]);
+        lice.setAttribute("aria-label", "Karikatura " + (i + 1) + ": " + (spolRocno[i] === "z" ? "ženska" : "moški"));
+      };
+      lice.addEventListener("click", preklopi);
+      lice.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); preklopi(); }
+      });
+      row.append(lice);
 
       const inp = document.createElement("input");
       inp.type = "text";
@@ -1250,7 +1356,11 @@
       inp.placeholder = "Ime igralca";
       inp.autocomplete = "off";
       inp.maxLength = 18;
-      inp.addEventListener("input", () => { nameFields[i] = inp.value; });
+      inp.addEventListener("input", () => {
+        nameFields[i] = inp.value;
+        // dokler spola ne popraviš ročno, sledi imenu
+        if (!spolRocno[i]) lice.innerHTML = face(i, spolIz(inp.value));
+      });
       inp.addEventListener("keydown", e => {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -1267,6 +1377,7 @@
       del.addEventListener("click", () => {
         if (nameFields.length <= 3) return;
         nameFields.splice(i, 1);
+        spolRocno.splice(i, 1);
         renderPlayers(false);
       });
 
@@ -1344,7 +1455,7 @@
     err.textContent = "";
     // karikatura ostane vezana na mesto na seznamu
     state.players = nameFields
-      .map((n, i) => ({ name: n.trim(), face: i, score: 0 }))
+      .map((n, i) => ({ name: n.trim(), face: i, spol: spolZa(i), score: 0 }))
       .filter(p => p.name);
     state.roundNo = 0;
     startRound();
@@ -1369,7 +1480,7 @@
     const n = state.players.length;
     const zacetnik = Math.floor(Math.random() * n);
     state.order = state.players.map((_, i) => (zacetnik + i) % n);
-    state.dealIdx = 0; state.accused = null; state.scored = false;
+    state.dealIdx = 0; state.accused = null; state.scored = false; state.korencek = false;
     renderDeal();
     show("s-deal");
   }
@@ -1381,7 +1492,7 @@
   function renderDeal() {
     const i = state.order[state.dealIdx];
     $("deal-name").textContent = state.players[i].name;
-    $("deal-face").innerHTML = face(state.players[i].face);
+    $("deal-face").innerHTML = face(state.players[i].face, state.players[i].spol);
     $("deal-count").textContent = (state.dealIdx + 1) + " / " + state.players.length;
     $("deal-round").textContent = "Runda " + state.roundNo;
     seen = false;
@@ -1436,7 +1547,7 @@
   function renderRound() {
     const first = state.players[state.order[0]];
     $("round-starter").textContent = first.name;
-    $("round-face").innerHTML = face(first.face);
+    $("round-face").innerHTML = face(first.face, first.spol);
     const ul = $("round-order");
     ul.textContent = "";
     state.order.forEach((p, idx) => {
@@ -1444,7 +1555,7 @@
       const num = document.createElement("span");
       num.className = "num";
       num.textContent = String(idx + 1).padStart(2, "0");
-      li.append(num, faceEl(state.players[p].face, "1.7rem"));
+      li.append(num, faceEl(state.players[p].face, state.players[p].spol, "1.7rem"));
       const who = document.createElement("span");
       who.className = "who";
       who.textContent = state.players[p].name;
@@ -1460,6 +1571,12 @@
   }
 
   $("to-vote").addEventListener("click", () => { renderVote(); show("s-vote"); });
+  $("korencek").addEventListener("click", () => {
+    state.korencek = true;
+    state.accused = null;
+    renderResult();
+    show("s-result");
+  });
 
   /* ---------------- glasovanje ---------------- */
   function renderVote() {
@@ -1471,7 +1588,7 @@
       b.type = "button";
       b.className = "vote-btn";
       b.setAttribute("aria-pressed", "false");
-      b.append(faceEl(p.face, "2.1rem"));
+      b.append(faceEl(p.face, p.spol, "2.1rem"));
       const who = document.createElement("span");
       who.className = "who";
       who.textContent = p.name;
@@ -1495,21 +1612,32 @@
   const impNames = () => state.impostors.map(i => state.players[i].name).join(" in ");
 
   function renderResult() {
-    $("res-word").textContent = state.word;
-    $("res-hint").textContent = "blefer je videl samo: " + state.hint;
+    // iskana beseda se v zaključni fazi ne izpiše nikjer — razkrije se le blefrov namig
+    $("res-word").textContent = state.hint;
 
     const faces = $("res-faces");
     faces.textContent = "";
     state.impostors.forEach(i => {
       const wrap = document.createElement("span");
       wrap.className = "stamped";
-      wrap.append(faceEl(state.players[i].face, "4.6rem"));
+      wrap.append(faceEl(state.players[i].face, state.players[i].spol, "4.6rem"));
       faces.append(wrap);
     });
 
     const caught = state.accused !== null && state.impostors.includes(state.accused);
     const box = $("res-verdict");
     box.classList.remove("win", "lose");
+
+    if (state.korencek) {
+      box.classList.add("win");
+      $("res-title").textContent = "Korenček!";
+      $("res-text").textContent = (state.impostors.length > 1 ? "Blefra sta bila " : "Blefer je bil ")
+        + impNames() + " — izdal je koren iskane besede in izgubi brez zadnje priložnosti.";
+      $("guess-box").style.display = "none";
+      applyScore(true, false);
+      renderScore();
+      return;
+    }
 
     if (caught) {
       box.classList.add("win");
@@ -1534,6 +1662,11 @@
   function applyScore(caught, guessed) {
     if (state.scored) return;
     state.scored = true;
+    if (state.korencek) {
+      // koren izdan: točko poberejo vsi razen blefrov, ti ostanejo praznih rok
+      state.players.forEach((p, i) => { if (!state.impostors.includes(i)) p.score += 1; });
+      return;
+    }
     if (!caught) {
       state.impostors.forEach(i => state.players[i].score += 2);
     } else if (guessed) {
@@ -1567,7 +1700,7 @@
         const tr = document.createElement("tr");
         if (state.impostors.includes(i)) tr.className = "imp";
         const td1 = document.createElement("td");
-        td1.append(faceEl(p.face, "1.6rem"));
+        td1.append(faceEl(p.face, p.spol, "1.6rem"));
         const nm = document.createElement("span");
         nm.textContent = p.name;
         td1.append(nm);
